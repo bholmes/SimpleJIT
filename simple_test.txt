@@ -1,2 +1,0 @@
-load 42
-return

@@ -1,6 +1,0 @@
-load 100
-load 50
-sub
-load 25
-mul
-ret
