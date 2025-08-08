@@ -14,7 +14,7 @@ public class Parser
         foreach (var line in lines)
         {
             var trimmedLine = line.Trim();
-            if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith("//"))
+            if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith("//") || trimmedLine.StartsWith("#"))
                 continue;
 
             var instruction = ParseLine(trimmedLine);
@@ -27,6 +27,14 @@ public class Parser
 
     private static Instruction? ParseLine(string line)
     {
+        // Handle inline comments by removing everything after # or //
+        int commentIndex = line.IndexOf('#');
+        if (commentIndex == -1)
+            commentIndex = line.IndexOf("//");
+        
+        if (commentIndex >= 0)
+            line = line.Substring(0, commentIndex);
+        
         var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0) return null;
 
