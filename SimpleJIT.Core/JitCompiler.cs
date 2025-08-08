@@ -254,8 +254,18 @@ public unsafe class JitCompiler
         }
 
         // Function epilogue - get top stack value as return value
+        // Default to 0 if no instructions were executed
+        // xor rax, rax (set rax = 0)
+        code.AddRange([0x48, 0x31, 0xC0]);
+        
+        // If stack has values (r12 > 0), get the top value
+        // test r12, r12
+        code.AddRange([0x4D, 0x85, 0xE4]);
+        // je skip_load (if r12 == 0, skip loading from stack)
+        code.AddRange([0x74, 0x05]);
         // mov rax, [rsp + r12*8 - 8] (get top stack value)
         code.AddRange([0x4A, 0x8B, 0x44, 0xE4, 0xF8]);
+        // skip_load:
         
         // Restore stack
         // add rsp, 512
@@ -449,13 +459,20 @@ public unsafe class JitCompiler
 
     private void EmitSubX64(List<byte> code)
     {
-        // Similar to add but with sub instruction
-        code.AddRange([0x49, 0xFF, 0xCC]); // dec r12
-        code.AddRange([0x4A, 0x8B, 0x04, 0xE4]); // mov rax, [rsp + r12*8]
-        code.AddRange([0x49, 0xFF, 0xCC]); // dec r12
-        code.AddRange([0x4A, 0x2B, 0x04, 0xE4]); // sub rax, [rsp + r12*8]
-        code.AddRange([0x4A, 0x89, 0x04, 0xE4]); // mov [rsp + r12*8], rax
-        code.AddRange([0x49, 0xFF, 0xC4]); // inc r12
+        // dec r12 (pop first operand - the subtrahend)
+        code.AddRange([0x49, 0xFF, 0xCC]); 
+        // mov rax, [rsp + r12*8] (get first operand - subtrahend)
+        code.AddRange([0x4A, 0x8B, 0x04, 0xE4]); 
+        // dec r12 (pop second operand - the minuend)
+        code.AddRange([0x49, 0xFF, 0xCC]); 
+        // neg rax (negate the subtrahend)
+        code.AddRange([0x48, 0xF7, 0xD8]); 
+        // add rax, [rsp + r12*8] (add minuend + (-subtrahend) = minuend - subtrahend)
+        code.AddRange([0x4A, 0x03, 0x04, 0xE4]); 
+        // mov [rsp + r12*8], rax (push result)
+        code.AddRange([0x4A, 0x89, 0x04, 0xE4]); 
+        // inc r12 (increment stack pointer)
+        code.AddRange([0x49, 0xFF, 0xC4]); 
     }
 
     private void EmitMulX64(List<byte> code)
@@ -470,13 +487,22 @@ public unsafe class JitCompiler
 
     private void EmitDivX64(List<byte> code)
     {
-        code.AddRange([0x49, 0xFF, 0xCC]); // dec r12
-        code.AddRange([0x4A, 0x8B, 0x04, 0xE4]); // mov rax, [rsp + r12*8]
-        code.AddRange([0x49, 0xFF, 0xCC]); // dec r12
-        code.AddRange([0x48, 0x99]); // cqo (sign extend rax to rdx:rax)
-        code.AddRange([0x4A, 0xF7, 0x3C, 0xE4]); // idiv [rsp + r12*8]
-        code.AddRange([0x4A, 0x89, 0x04, 0xE4]); // mov [rsp + r12*8], rax
-        code.AddRange([0x49, 0xFF, 0xC4]); // inc r12
+        // dec r12 (pop first operand - the divisor)
+        code.AddRange([0x49, 0xFF, 0xCC]); 
+        // mov rcx, [rsp + r12*8] (get divisor into rcx)
+        code.AddRange([0x4A, 0x8B, 0x0C, 0xE4]); 
+        // dec r12 (pop second operand - the dividend)
+        code.AddRange([0x49, 0xFF, 0xCC]); 
+        // mov rax, [rsp + r12*8] (get dividend into rax)
+        code.AddRange([0x4A, 0x8B, 0x04, 0xE4]); 
+        // cqo (sign extend rax to rdx:rax)
+        code.AddRange([0x48, 0x99]); 
+        // idiv rcx (divide rdx:rax by rcx, quotient in rax)
+        code.AddRange([0x48, 0xF7, 0xF9]); 
+        // mov [rsp + r12*8], rax (push result)
+        code.AddRange([0x4A, 0x89, 0x04, 0xE4]); 
+        // inc r12 (increment stack pointer)
+        code.AddRange([0x49, 0xFF, 0xC4]); 
     }
 
     private void EmitPrintX64(List<byte> code)
