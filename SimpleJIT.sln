@@ -2,9 +2,9 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleJIT", "SimpleJIT.csproj", "{4E79B96A-A30B-D3E4-D7E4-F808E950ED49}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleJIT.Core", "SimpleJIT.Core\SimpleJIT.Core.csproj", "{91E4A59F-391A-4D65-B03E-84C9BD8F5B96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleJIT", "SimpleJIT\SimpleJIT.csproj", "{35A96CF1-35EA-47BB-9155-FF7BD0FAA7BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,14 +12,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4E79B96A-A30B-D3E4-D7E4-F808E950ED49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E79B96A-A30B-D3E4-D7E4-F808E950ED49}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E79B96A-A30B-D3E4-D7E4-F808E950ED49}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E79B96A-A30B-D3E4-D7E4-F808E950ED49}.Release|Any CPU.Build.0 = Release|Any CPU
 		{91E4A59F-391A-4D65-B03E-84C9BD8F5B96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{91E4A59F-391A-4D65-B03E-84C9BD8F5B96}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91E4A59F-391A-4D65-B03E-84C9BD8F5B96}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91E4A59F-391A-4D65-B03E-84C9BD8F5B96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35A96CF1-35EA-47BB-9155-FF7BD0FAA7BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35A96CF1-35EA-47BB-9155-FF7BD0FAA7BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35A96CF1-35EA-47BB-9155-FF7BD0FAA7BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35A96CF1-35EA-47BB-9155-FF7BD0FAA7BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

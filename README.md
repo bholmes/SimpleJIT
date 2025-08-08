@@ -6,12 +6,17 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 
 ## Project Structure
 
-- **SimpleJIT** - Console application (entry point)
-- **SimpleJIT.Core** - Reusable library containing core functionality
-  - Instruction parsing
-  - Virtual machine interpreter  
-  - JIT compiler
-  - All core types and logic
+- **SimpleJIT/** - Console application (entry point)
+  - `Program.cs` - Main application logic
+  - `SimpleJIT.csproj` - Console app project file
+- **SimpleJIT.Core/** - Reusable library containing core functionality
+  - `Instruction.cs` - Instruction definitions and types
+  - `Parser.cs` - Instruction file parsing
+  - `VirtualMachine.cs` - Stack-based interpreter  
+  - `JitCompiler.cs` - Native code generation
+  - `SimpleJIT.Core.csproj` - Library project file
+- **Test files** - Example instruction files (`*.txt`)
+- **Documentation** - README, test scripts, etc.
 
 ## Features
 
@@ -35,6 +40,11 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 
 ### Console Application
 ```bash
+# From the solution root
+dotnet run --project SimpleJIT <instruction_file>
+
+# Or from the SimpleJIT directory
+cd SimpleJIT
 dotnet run <instruction_file>
 ```
 
