@@ -1,9 +1,6 @@
 using System;
 using System.IO;
-
-using Parser = SimpleJIT.Parser;
-
-namespace SimpleJIT;
+using SimpleJIT;
 
 class Program
 {

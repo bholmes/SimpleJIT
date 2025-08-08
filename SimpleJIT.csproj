@@ -4,7 +4,16 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="SimpleJIT.Core\SimpleJIT.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="SimpleJIT.Core\**" />
+    <EmbeddedResource Remove="SimpleJIT.Core\**" />
+    <None Remove="SimpleJIT.Core\**" />
+  </ItemGroup>
 
 </Project>

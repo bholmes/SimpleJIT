@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>SimpleJIT.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>SimpleJIT Contributors</Authors>
+    <Description>A simple JIT compiler and virtual machine library for stack-based instruction languages</Description>
+    <PackageTags>jit compiler virtual-machine interpreter</PackageTags>
+  </PropertyGroup>
+
+</Project>

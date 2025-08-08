@@ -4,6 +4,15 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 1. **Virtual Machine Interpreter** - Safe, cross-platform execution 
 2. **JIT Compilation** - Direct native code generation (platform dependent)
 
+## Project Structure
+
+- **SimpleJIT** - Console application (entry point)
+- **SimpleJIT.Core** - Reusable library containing core functionality
+  - Instruction parsing
+  - Virtual machine interpreter  
+  - JIT compiler
+  - All core types and logic
+
 ## Features
 
 - Parse simple instruction language from text files
@@ -24,8 +33,33 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 
 ## Usage
 
+### Console Application
 ```bash
 dotnet run <instruction_file>
+```
+
+### As a Library
+```csharp
+using SimpleJIT;
+
+// Parse instructions
+var instructions = Parser.ParseFile("myprogram.txt");
+
+// Execute with VM
+var vm = new VirtualMachine();
+var result = vm.Execute(instructions);
+
+// Or try JIT compilation
+try 
+{
+    var compiled = JitCompiler.CompileInstructions(instructions);
+    var jitResult = compiled();
+}
+catch (Exception ex)
+{
+    // JIT may fail on some platforms due to security restrictions
+    Console.WriteLine($"JIT failed: {ex.Message}");
+}
 ```
 
 ## Example Results
