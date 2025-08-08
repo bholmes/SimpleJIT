@@ -49,19 +49,26 @@ class Program
             try
             {
                 var compiledFunction = JitCompiler.CompileInstructions(instructions);
-                Console.WriteLine("JIT compilation successful!");
-
-                Console.WriteLine("Executing JIT compiled code...");
-                var jitResult = compiledFunction();
-                Console.WriteLine($"JIT Execution completed. Result: {jitResult}");
-
-                if (vmResult == jitResult)
+                if (compiledFunction != null)
                 {
-                    Console.WriteLine("✓ VM and JIT results match!");
+                    Console.WriteLine("JIT compilation successful!");
+
+                    Console.WriteLine("Executing JIT compiled code...");
+                    var jitResult = compiledFunction();
+                    Console.WriteLine($"JIT Execution completed. Result: {jitResult}");
+
+                    if (vmResult == jitResult)
+                    {
+                        Console.WriteLine("✓ VM and JIT results match!");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠ Results differ: VM={vmResult}, JIT={jitResult}");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"⚠ Results differ: VM={vmResult}, JIT={jitResult}");
+                    Console.WriteLine("JIT compilation failed - using VM result only");
                 }
             }
             catch (Exception jitEx)

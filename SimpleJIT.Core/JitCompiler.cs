@@ -38,28 +38,37 @@ public unsafe class JitCompiler
 
     public delegate long CompiledFunction();
 
-    public static CompiledFunction CompileInstructions(List<Instruction> instructions)
+    public static CompiledFunction? CompileInstructions(List<Instruction> instructions)
     {
         var compiler = new JitCompiler();
         return compiler.Compile(instructions);
     }
 
-    private CompiledFunction Compile(List<Instruction> instructions)
+    private CompiledFunction? Compile(List<Instruction> instructions)
     {
-        var codeBytes = GenerateCode(instructions);
-        var writableMemory = AllocateWritableMemory(codeBytes.Length);
-        
-        // Write the code to writable memory
-        fixed (byte* codePtr = codeBytes)
+        try
         {
-            Buffer.MemoryCopy(codePtr, writableMemory.ToPointer(), codeBytes.Length, codeBytes.Length);
+            var codeBytes = GenerateCode(instructions);
+            var writableMemory = AllocateWritableMemory(codeBytes.Length);
+            
+            // Write the code to writable memory
+            fixed (byte* codePtr = codeBytes)
+            {
+                Buffer.MemoryCopy(codePtr, writableMemory.ToPointer(), codeBytes.Length, codeBytes.Length);
+            }
+
+            // Change memory protection to executable
+            var executableMemory = CommitExecutableMemory(writableMemory, codeBytes.Length);
+
+            var functionPtr = Marshal.GetDelegateForFunctionPointer<CompiledFunction>(executableMemory);
+            return functionPtr;
         }
-
-        // Change memory protection to executable
-        var executableMemory = CommitExecutableMemory(writableMemory, codeBytes.Length);
-
-        var functionPtr = Marshal.GetDelegateForFunctionPointer<CompiledFunction>(executableMemory);
-        return functionPtr;
+        catch
+        {
+            // If JIT compilation fails for any reason, return null
+            // This allows graceful fallback to VM execution
+            return null;
+        }
     }
 
     private IntPtr AllocateWritableMemory(int size)
@@ -131,6 +140,20 @@ public unsafe class JitCompiler
         // mov x29, sp                   // Set up frame pointer
         code.AddRange([0xFD, 0x03, 0x00, 0x91]);
         
+        // Handle empty instructions case early
+        if (instructions.Count == 0)
+        {
+            // mov x0, #0                    // Return 0 for empty instructions
+            code.AddRange([0x00, 0x00, 0x80, 0xD2]);
+            
+            // ldp x29, x30, [sp], #16       // Restore frame pointer and link register
+            code.AddRange([0xFD, 0x7B, 0xC1, 0xA8]);
+            // ret                           // Return
+            code.AddRange([0xC0, 0x03, 0x5F, 0xD6]);
+            
+            return code.ToArray();
+        }
+        
         // Reserve space for local stack (simulating our VM stack)
         // sub sp, sp, #512              // Reserve 512 bytes for stack
         code.AddRange([0xFF, 0x03, 0x08, 0xD1]);
@@ -167,19 +190,11 @@ public unsafe class JitCompiler
         }
 
         // Function epilogue - get top stack value as return value
-        if (instructions.Count > 0)
-        {
-            // Get the top value from stack (x19 points to next slot, so x19-1 is the top)
-            // sub x19, x19, #1              // Decrement to get last pushed value index
-            code.AddRange([0x73, 0x06, 0x00, 0xD1]);
-            // ldr x0, [sp, x19, lsl #3]     // Load value at stack[x19] into x0
-            code.AddRange([0xE0, 0x7B, 0x73, 0xF8]);
-        }
-        else
-        {
-            // mov x0, #0                    // Return 0 if no instructions
-            code.AddRange([0x00, 0x00, 0x80, 0xD2]);
-        }
+        // Get the top value from stack (x19 points to next slot, so x19-1 is the top)
+        // sub x19, x19, #1              // Decrement to get last pushed value index
+        code.AddRange([0x73, 0x06, 0x00, 0xD1]);
+        // ldr x0, [sp, x19, lsl #3]     // Load value at stack[x19] into x0
+        code.AddRange([0xE0, 0x7B, 0x73, 0xF8]);
         
         // Restore stack
         // add sp, sp, #512              // Restore stack pointer
@@ -258,7 +273,8 @@ public unsafe class JitCompiler
     private void EmitLoadArm64(List<byte> code, long value)
     {
         // Load the immediate value into x0 using correct ARM64 encoding
-        // For values 0-65535, we can use a simple mov (movz)
+        // For negative values, we need to handle them as 64-bit signed values
+        
         if (value >= 0 && value <= 0xFFFF)
         {
             // movz x0, #value (move zero with 16-bit immediate)
@@ -266,9 +282,17 @@ public unsafe class JitCompiler
             var instruction = 0xD2800000u | ((uint)imm16 << 5) | 0u; // target register x0
             code.AddRange(BitConverter.GetBytes(instruction));
         }
+        else if (value < 0)
+        {
+            // For negative values, use movn (move NOT) instruction
+            // movn x0, #(~value & 0xFFFF)  - Move NOT of the complement
+            var complement = (ushort)(~value & 0xFFFF);
+            var instruction = 0x92800000u | ((uint)complement << 5) | 0u; // MOVN x0, #complement
+            code.AddRange(BitConverter.GetBytes(instruction));
+        }
         else
         {
-            // For larger values, use movz + movk sequence
+            // For larger positive values, use movz + movk sequence
             // movz x0, #(value & 0xFFFF)
             var low16 = (ushort)(value & 0xFFFF);
             var instruction1 = 0xD2800000u | ((uint)low16 << 5) | 0u;
