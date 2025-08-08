@@ -6,7 +6,8 @@ namespace SimpleJIT.Core;
 
 public unsafe class JitCompiler
 {
-    private const uint PAGE_EXECUTE_READWRITE = 0x40;
+    private const uint PAGE_READWRITE = 0x04;
+    private const uint PAGE_EXECUTE_READ = 0x20;
     private const uint MEM_COMMIT = 0x1000;
     private const uint MEM_RESERVE = 0x2000;
     private const uint MEM_RELEASE = 0x8000;
@@ -17,11 +18,17 @@ public unsafe class JitCompiler
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize, uint dwFreeType);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+
     [DllImport("libc", EntryPoint = "mmap")]
     private static extern IntPtr mmap_unix(IntPtr addr, UIntPtr length, int prot, int flags, int fd, IntPtr offset);
 
     [DllImport("libc", EntryPoint = "munmap")]
     private static extern int munmap_unix(IntPtr addr, UIntPtr length);
+
+    [DllImport("libc", EntryPoint = "mprotect")]
+    private static extern int mprotect_unix(IntPtr addr, UIntPtr len, int prot);
 
     private const int PROT_READ = 1;
     private const int PROT_WRITE = 2;
@@ -40,29 +47,33 @@ public unsafe class JitCompiler
     private CompiledFunction Compile(List<Instruction> instructions)
     {
         var codeBytes = GenerateCode(instructions);
-        var executableMemory = AllocateExecutableMemory(codeBytes.Length);
+        var writableMemory = AllocateWritableMemory(codeBytes.Length);
         
+        // Write the code to writable memory
         fixed (byte* codePtr = codeBytes)
         {
-            Buffer.MemoryCopy(codePtr, executableMemory.ToPointer(), codeBytes.Length, codeBytes.Length);
+            Buffer.MemoryCopy(codePtr, writableMemory.ToPointer(), codeBytes.Length, codeBytes.Length);
         }
+
+        // Change memory protection to executable
+        var executableMemory = CommitExecutableMemory(writableMemory, codeBytes.Length);
 
         var functionPtr = Marshal.GetDelegateForFunctionPointer<CompiledFunction>(executableMemory);
         return functionPtr;
     }
 
-    private IntPtr AllocateExecutableMemory(int size)
+    private IntPtr AllocateWritableMemory(int size)
     {
         IntPtr memory;
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            memory = VirtualAlloc(IntPtr.Zero, (UIntPtr)size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+            memory = VirtualAlloc(IntPtr.Zero, (UIntPtr)size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         }
         else
         {
-            // On Unix/macOS, use mmap with -1 for anonymous mapping
-            memory = mmap_unix(IntPtr.Zero, (UIntPtr)size, PROT_READ | PROT_WRITE | PROT_EXEC, 
+            // On Unix/macOS, use mmap with read/write permissions initially
+            memory = mmap_unix(IntPtr.Zero, (UIntPtr)size, PROT_READ | PROT_WRITE, 
                               MAP_PRIVATE | MAP_ANONYMOUS, -1, IntPtr.Zero);
             
             // Check for MAP_FAILED (which is -1 cast to IntPtr)
@@ -71,7 +82,29 @@ public unsafe class JitCompiler
         }
 
         if (memory == IntPtr.Zero)
-            throw new InvalidOperationException("Failed to allocate executable memory");
+            throw new InvalidOperationException("Failed to allocate writable memory");
+
+        return memory;
+    }
+
+    private IntPtr CommitExecutableMemory(IntPtr memory, int size)
+    {
+        bool success;
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Change protection from PAGE_READWRITE to PAGE_EXECUTE_READ
+            success = VirtualProtect(memory, (UIntPtr)size, PAGE_EXECUTE_READ, out _);
+        }
+        else
+        {
+            // On Unix/macOS, use mprotect to change from RW to RX
+            var result = mprotect_unix(memory, (UIntPtr)size, PROT_READ | PROT_EXEC);
+            success = result == 0;
+        }
+
+        if (!success)
+            throw new InvalidOperationException("Failed to commit executable memory");
 
         return memory;
     }
