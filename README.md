@@ -15,7 +15,13 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
   - `VirtualMachine.cs` - Stack-based interpreter  
   - `JitCompiler.cs` - Native code generation
   - `SimpleJIT.Core.csproj` - Library project file
-- **Test files** - Example instruction files (`*.txt`)
+- **samples/** - Example instruction files
+  - `simple.txt` - Basic arithmetic example
+  - `complex.txt` - Complex expression example
+  - `multi.txt` - Multiple operations with debugging
+  - `example.txt` - Comprehensive demonstration
+  - `divzero.txt` - Error handling test
+  - `invalid.txt` - Parser error test
 - **Documentation** - README, test scripts, etc.
 
 ## Features
@@ -41,11 +47,11 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 ### Console Application
 ```bash
 # From the solution root
-dotnet run --project SimpleJIT <instruction_file>
+dotnet run --project SimpleJIT samples/<instruction_file>
 
 # Or from the SimpleJIT directory
 cd SimpleJIT
-dotnet run <instruction_file>
+dotnet run ../samples/<instruction_file>
 ```
 
 ### As a Library
@@ -81,7 +87,7 @@ The program will:
 
 ## Example Instruction Files
 
-### Simple Addition (`simple.txt`)
+### Simple Addition (`samples/simple.txt`)
 ```
 // Simple addition: 7 + 3 = 10
 load 7
@@ -90,7 +96,7 @@ add
 ret
 ```
 
-### Complex Arithmetic (`complex.txt`)
+### Complex Arithmetic (`samples/complex.txt`)
 ```
 // Complex arithmetic: ((15 - 3) * 2) / 4 = 6
 load 15
@@ -104,7 +110,7 @@ print
 ret
 ```
 
-### Multiple Operations (`multi.txt`)
+### Multiple Operations (`samples/multi.txt`)
 ```
 // Multiple operations with prints
 load 100
