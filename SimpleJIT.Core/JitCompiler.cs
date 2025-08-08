@@ -257,29 +257,30 @@ public unsafe class JitCompiler
     // ARM64 instruction emitters
     private void EmitLoadArm64(List<byte> code, long value)
     {
-        // Load the immediate value into x0 using mov instruction
-        // For values 0-65535, we can use a simple mov
+        // Load the immediate value into x0 using correct ARM64 encoding
+        // For values 0-65535, we can use a simple mov (movz)
         if (value >= 0 && value <= 0xFFFF)
         {
-            // mov x0, #value
+            // movz x0, #value (move zero with 16-bit immediate)
             var imm16 = (ushort)value;
-            code.AddRange([0x00, (byte)(imm16 & 0xFF), (byte)((imm16 >> 8) & 0xFF), 0xD2]);
+            var instruction = 0xD2800000u | ((uint)imm16 << 5) | 0u; // target register x0
+            code.AddRange(BitConverter.GetBytes(instruction));
         }
         else
         {
             // For larger values, use movz + movk sequence
             // movz x0, #(value & 0xFFFF)
             var low16 = (ushort)(value & 0xFFFF);
-            code.AddRange([0x00, (byte)(low16 & 0xFF), (byte)((low16 >> 8) & 0xFF), 0xD2]);
+            var instruction1 = 0xD2800000u | ((uint)low16 << 5) | 0u;
+            code.AddRange(BitConverter.GetBytes(instruction1));
             
             // movk x0, #((value >> 16) & 0xFFFF), lsl #16
             var mid16 = (ushort)((value >> 16) & 0xFFFF);
             if (mid16 != 0)
             {
-                code.AddRange([0x00, (byte)(mid16 & 0xFF), (byte)((mid16 >> 8) & 0xFF), 0xF2]);
+                var instruction2 = 0xF2A00000u | ((uint)mid16 << 5) | 0u;
+                code.AddRange(BitConverter.GetBytes(instruction2));
             }
-            
-            // For 64-bit values, we'd need more movk instructions, but let's keep it simple for now
         }
         
         // Store x0 to stack at position [sp + x19*8]
