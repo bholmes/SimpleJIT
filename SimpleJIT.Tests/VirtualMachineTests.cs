@@ -1,4 +1,4 @@
-using SimpleJIT;
+using SimpleJIT.Core;
 using Xunit;
 
 namespace SimpleJIT.Tests.Unit;

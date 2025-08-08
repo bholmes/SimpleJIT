@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
-namespace SimpleJIT;
+namespace SimpleJIT.Core;
 
 public unsafe class JitCompiler
 {

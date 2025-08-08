@@ -70,7 +70,7 @@ dotnet run ../samples/<instruction_file>
 
 ### As a Library
 ```csharp
-using SimpleJIT;
+using SimpleJIT.Core;
 
 // Parse instructions from file
 var instructions = Parser.ParseFile("myprogram.txt");

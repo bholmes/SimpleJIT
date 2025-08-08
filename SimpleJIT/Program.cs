@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using SimpleJIT;
+using SimpleJIT.Core;
 
 class Program
 {

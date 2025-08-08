@@ -1,4 +1,4 @@
-namespace SimpleJIT;
+namespace SimpleJIT.Core;
 
 public enum InstructionType
 {

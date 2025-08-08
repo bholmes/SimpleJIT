@@ -2,7 +2,7 @@ using System.IO;
 using System;
 using System.Collections.Generic;
 
-namespace SimpleJIT;
+namespace SimpleJIT.Core;
 
 public class Parser
 {
