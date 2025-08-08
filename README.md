@@ -60,10 +60,11 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 
 ### Console Application
 ```bash
-# From the solution root
+# From the solution root (builds all projects)
+dotnet build SimpleJIT.sln
 dotnet run --project SimpleJIT samples/<instruction_file>
 
-# Or from the SimpleJIT directory
+# Or build and run specific project
 cd SimpleJIT
 dotnet run ../samples/<instruction_file>
 ```
@@ -94,10 +95,13 @@ else
 
 ### Running Tests
 ```bash
-# Run all tests
+# Run all tests (via solution)
 dotnet test
 
-# Run tests with detailed output
+# Run tests via solution with detailed output
+dotnet test SimpleJIT.sln --verbosity normal
+
+# Run tests via specific project
 dotnet test SimpleJIT.Tests/SimpleJIT.Tests.csproj --verbosity normal
 
 # Run specific test category
