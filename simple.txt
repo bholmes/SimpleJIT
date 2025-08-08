@@ -1,0 +1,5 @@
+// Simple addition: 7 + 3 = 10
+load 7
+load 3
+add
+ret

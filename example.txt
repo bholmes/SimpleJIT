@@ -1,0 +1,8 @@
+// Simple arithmetic: (10 + 5) * 2 = 30
+load 10
+load 5
+add
+load 2
+mul
+print
+ret

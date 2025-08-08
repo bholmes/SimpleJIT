@@ -1,0 +1,5 @@
+// Invalid instruction test
+load 5
+badinstruction 10
+add
+ret

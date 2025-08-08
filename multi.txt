@@ -1,0 +1,12 @@
+// Multiple operations with prints
+load 100
+load 25
+sub
+print
+load 5
+mul
+print
+load 3
+div
+print
+ret

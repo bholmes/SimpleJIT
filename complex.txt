@@ -1,0 +1,10 @@
+// Complex arithmetic: ((15 - 3) * 2) / 4 = 6
+load 15
+load 3
+sub
+load 2
+mul
+load 4
+div
+print
+ret
