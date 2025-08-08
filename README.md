@@ -13,7 +13,7 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
   - `Instruction.cs` - Instruction definitions and types
   - `Parser.cs` - Instruction file parsing with comment support
   - `VirtualMachine.cs` - Stack-based interpreter  
-  - `JitCompiler.cs` - Native code generation with platform detection
+  - `JitCompiler.cs` - Cross-architecture native code generation with x64 and ARM64 support
   - `SimpleJIT.Core.csproj` - Library project file
 - **SimpleJIT.Tests/** - Comprehensive test suite
   - `InstructionTests.cs` - Unit tests for instruction types
@@ -34,7 +34,9 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 
 - **Parse simple instruction language** from text files with support for `#` and `//` comments
 - **Execute using a stack-based virtual machine** interpreter (guaranteed cross-platform)
-- **Attempt JIT compilation** to native x64 assembly where supported by platform security
+- **Cross-architecture JIT compilation** to native assembly for both x64 and ARM64 processors
+- **Two-stage memory allocation** with security-compliant executable memory management
+- **Automatic architecture detection** with processor-specific code generation
 - **Cross-platform compatibility** with intelligent fallback execution strategies
 - **Comprehensive error handling** for stack underflow, division by zero, and file parsing errors
 - **Professional testing suite** with 52 unit and integration tests using xUnit framework
@@ -80,16 +82,17 @@ var instructions = Parser.ParseFile("myprogram.txt");
 var vm = new VirtualMachine();
 var result = vm.Execute(instructions);
 
-// Or attempt JIT compilation (platform dependent)
+// Attempt JIT compilation (now works on all major platforms and architectures)
 var compiledFunction = JitCompiler.CompileInstructions(instructions);
 if (compiledFunction != null)
 {
     var jitResult = compiledFunction();
     Console.WriteLine($"JIT result: {jitResult}");
+    Console.WriteLine($"Architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
 }
 else
 {
-    Console.WriteLine("JIT compilation not supported on this platform");
+    Console.WriteLine("JIT compilation failed");
 }
 ```
 
@@ -113,8 +116,10 @@ dotnet test --filter "FullyQualifiedName~Integration"
 
 The program will:
 1. Parse the instruction file
-2. Execute using the VM interpreter (always works)
-3. Attempt JIT compilation (may fail on some platforms due to security restrictions)
+2. Execute using the VM interpreter (always works cross-platform)
+3. Perform JIT compilation with automatic architecture detection (x64 or ARM64)
+4. Execute JIT-compiled native code for optimal performance
+5. Compare results between VM and JIT execution to ensure correctness
 
 ## Example Instruction Files
 
@@ -161,11 +166,15 @@ ret
 
 - **Virtual Machine**: Works on all platforms (Windows, macOS, Linux)
 - **JIT Compilation**: 
-  - ✅ **Windows**: Generally works with executable memory allocation
-  - ⚠️ **Linux**: Works on most distributions, depends on security settings
-  - ❌ **macOS**: Typically fails due to System Integrity Protection and security policies
-- **Test Suite**: All 52 tests run on all platforms with platform-aware expectations
-  - On macOS: 41/52 tests pass (VM and parser tests), 11 JIT tests appropriately fail
+  - ✅ **Windows x64**: Full support with executable memory allocation
+  - ✅ **Windows ARM64**: Full support with architecture-specific code generation
+  - ✅ **Linux x64**: Works on most distributions, depends on security settings
+  - ✅ **Linux ARM64**: Works on most distributions with ARM64 processors
+  - ✅ **macOS Intel (x64)**: Full support with two-stage memory allocation
+  - ✅ **macOS Apple Silicon (ARM64)**: Full support with native ARM64 code generation
+- **Architecture Detection**: Automatically detects x64 vs ARM64 and generates appropriate assembly
+- **Memory Management**: Uses two-stage allocation (read/write → read/execute) to comply with modern security policies
+- **Test Suite**: All 52 tests run on all platforms with full JIT compilation support
 
 ## Testing
 
@@ -190,18 +199,24 @@ The project demonstrates several key computer science concepts:
 
 - **Lexical Analysis**: Robust instruction parsing with comment support and error handling
 - **Virtual Machine Design**: Stack-based interpreter with comprehensive instruction set
-- **Just-In-Time Compilation**: Direct x64 assembly generation with platform detection
-- **Memory Management**: Platform-specific executable memory allocation strategies
+- **Cross-Architecture JIT Compilation**: Native code generation for both x64 and ARM64 processors
+- **Two-Stage Memory Management**: Security-compliant executable memory allocation (RW → RX)
+- **Architecture Detection**: Runtime processor detection with appropriate code generation
+- **Platform Abstraction**: Unified memory management across Windows, macOS, and Linux
 - **Error Handling**: Graceful degradation and comprehensive exception handling
-- **Cross-Platform Development**: Intelligent platform detection and fallback mechanisms
+- **Cross-Platform Development**: True cross-architecture compatibility with native performance
 - **Test-Driven Development**: Comprehensive test coverage with xUnit framework
 - **Software Architecture**: Clean separation between parsing, execution, and compilation layers
 
 ### Technical Highlights
 
 - **Unsafe Code**: Uses C# unsafe blocks for direct memory manipulation in JIT compiler
-- **Platform Interop**: Direct system calls for memory allocation (VirtualAlloc/mmap)
+- **Platform Interop**: Cross-platform memory allocation (VirtualAlloc on Windows, mmap on Unix)
+- **ARM64 Assembly**: Native ARM64 instruction encoding with proper function prologue/epilogue
+- **x64 Assembly**: Traditional x64 instruction generation for Intel/AMD processors
+- **Two-Stage Allocation**: AllocateWritableMemory() → write code → CommitExecutableMemory()
 - **Delegate Generation**: Dynamic function pointer creation for JIT-compiled code
+- **Runtime Architecture Detection**: Uses RuntimeInformation.ProcessArchitecture for code generation
 - **Stack Machine**: Classic stack-based virtual machine implementation
 - **Recursive Descent**: Simple but effective parsing strategy
 - **Professional Testing**: Industry-standard testing practices with comprehensive coverage
