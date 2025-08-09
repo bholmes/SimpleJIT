@@ -209,35 +209,6 @@ add
             }
         }
 
-        [Fact(Skip = "C-style comments are not implemented in the parser yet")]
-        public void ParseFile_MixedCommentStyles_HandlesCorrectly()
-        {
-            // Arrange
-            var tempFile = Path.GetTempFileName();
-            var content = @"# Hash comment
-/* C-style comment */
-load 5  # Inline hash comment
-/* Another C-style comment */ add /* Inline C-style */
-# Final hash comment";
-            File.WriteAllText(tempFile, content);
-            
-            try
-            {
-                // Act
-                var instructions = Parser.ParseFile(tempFile);
-                
-                // Assert
-                Assert.Equal(2, instructions.Count);
-                Assert.Equal(InstructionType.Load, instructions[0].Type);
-                Assert.Equal(5, instructions[0].Value);
-                Assert.Equal(InstructionType.Add, instructions[1].Type);
-            }
-            finally
-            {
-                File.Delete(tempFile);
-            }
-        }
-
         [Fact]
         public void ParseFile_WhitespaceAndEmptyLines_HandlesCorrectly()
         {
@@ -272,7 +243,7 @@ mul
             }
         }
 
-        [Fact(Skip = "Parser doesn't handle tab characters properly in values")]
+        [Fact]
         public void ParseFile_ExtraSpacesAroundValues_ParsesCorrectly()
         {
             // Arrange
@@ -364,7 +335,7 @@ load 0";
             }
         }
 
-        [Fact(Skip = "Parser error message has changed - now says 'Load instruction requires a value' instead of 'should have exactly one argument'")]
+        [Fact]
         public void ParseFile_LoadWithExtraArguments_ThrowsArgumentException()
         {
             // Arrange
@@ -384,7 +355,7 @@ load 0";
             }
         }
 
-        [Fact(Skip = "Parser no longer throws exception for non-load instructions with arguments - behavior has changed")]
+        [Fact]
         public void ParseFile_NonLoadInstructionWithArguments_ThrowsArgumentException()
         {
             // Arrange

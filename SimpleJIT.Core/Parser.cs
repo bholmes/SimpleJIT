@@ -35,7 +35,7 @@ public class Parser
         if (commentIndex >= 0)
             line = line.Substring(0, commentIndex);
         
-        var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var parts = line.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0) return null;
 
         var command = parts[0].ToLowerInvariant();
@@ -43,24 +43,35 @@ public class Parser
         return command switch
         {
             "load" => ParseLoad(parts),
-            "add" => new Instruction(InstructionType.Add),
-            "sub" => new Instruction(InstructionType.Sub),
-            "mul" => new Instruction(InstructionType.Mul),
-            "div" => new Instruction(InstructionType.Div),
-            "print" => new Instruction(InstructionType.Print),
-            "ret" or "return" => new Instruction(InstructionType.Return),
+            "add" => ParseSimpleInstruction(parts, InstructionType.Add, "add"),
+            "sub" => ParseSimpleInstruction(parts, InstructionType.Sub, "sub"),
+            "mul" => ParseSimpleInstruction(parts, InstructionType.Mul, "mul"),
+            "div" => ParseSimpleInstruction(parts, InstructionType.Div, "div"),
+            "print" => ParseSimpleInstruction(parts, InstructionType.Print, "print"),
+            "ret" or "return" => ParseSimpleInstruction(parts, InstructionType.Return, command),
             _ => throw new ArgumentException($"Unknown instruction: {command}")
         };
     }
 
     private static Instruction ParseLoad(string[] parts)
     {
-        if (parts.Length != 2)
+        if (parts.Length < 2)
             throw new ArgumentException("Load instruction requires a value");
+        
+        if (parts.Length > 2)
+            throw new ArgumentException("Load instruction should have exactly one argument");
 
         if (!long.TryParse(parts[1], out long value))
             throw new ArgumentException($"Invalid value for load instruction: {parts[1]}");
 
         return new Instruction(InstructionType.Load, value);
+    }
+
+    private static Instruction ParseSimpleInstruction(string[] parts, InstructionType instructionType, string instructionName)
+    {
+        if (parts.Length > 1)
+            throw new ArgumentException($"{char.ToUpper(instructionName[0]) + instructionName.Substring(1)} instruction should not have arguments");
+
+        return new Instruction(instructionType);
     }
 }
