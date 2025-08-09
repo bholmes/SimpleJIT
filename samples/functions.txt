@@ -1,0 +1,19 @@
+int Main ()
+{
+    // Simple arithmetic: (10 + 5) * 2 = 30
+    load 10
+    load 5
+    call Step1
+    load 2
+    mul
+    print
+    ret
+}
+
+int Step1(int, int)
+{
+    loadarg 0
+    loadarg 1
+    add
+    ret
+}
