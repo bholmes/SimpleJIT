@@ -10,6 +10,8 @@ public unsafe abstract class JitCompiler
 
     public static CompiledFunction? CompileInstructions(List<Instruction> instructions)
     {
+        if(instructions == null)
+            throw new ArgumentNullException(nameof(instructions), "Instructions cannot be null");
         JitCompiler compiler = RuntimeInformation.ProcessArchitecture == Architecture.Arm64
             ? new JitCompilerArm64()
             : new JitCompilerX64();

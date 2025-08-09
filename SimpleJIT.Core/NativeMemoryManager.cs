@@ -49,6 +49,9 @@ public static unsafe class NativeMemoryManager
     /// <exception cref="InvalidOperationException">Thrown if memory allocation fails</exception>
     public static IntPtr AllocateWritableMemory(int size)
     {
+        if (size <= 0)
+            throw new ArgumentOutOfRangeException(nameof(size), "Size must be greater than zero");
+        
         IntPtr memory;
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -85,6 +88,9 @@ public static unsafe class NativeMemoryManager
     /// <exception cref="InvalidOperationException">Thrown if memory protection change fails</exception>
     public static IntPtr CommitExecutableMemory(IntPtr memory, int size)
     {
+        if(memory == IntPtr.Zero || size <= 0)
+            throw new ArgumentException("Memory pointer cannot be null and size must be greater than zero");
+        
         bool success;
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
