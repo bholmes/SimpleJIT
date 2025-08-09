@@ -52,7 +52,9 @@ int Step1(int, int)
         public void ParseAndExecute_ActualFunctionsFile_ReturnsCorrectResult()
         {
             // Arrange - Test with the actual functions.txt file
-            var functionsFile = "/Users/bill.holmes/dev/del/SimpleJIT/samples/functions.txt";
+            var functionsFile = Path.Combine(
+                SampleFileIntegrationTests.SamplesDirectory, "functions.txt"
+            );
             
             // Act
             var program = FunctionParser.ParseProgram(functionsFile);

@@ -8,7 +8,7 @@ namespace SimpleJIT.Tests.Integration
 {
     public class SampleFileIntegrationTests
     {
-        private static readonly string SamplesDirectory = Path.Combine(
+        internal static readonly string SamplesDirectory = Path.Combine(
             Directory.GetCurrentDirectory(),
             "..", "..", "..", "..", "samples"
         );
