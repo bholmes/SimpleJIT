@@ -35,6 +35,7 @@ public unsafe class JitCompiler
     private const int PROT_EXEC = 4;
     private const int MAP_PRIVATE = 2;
     private const int MAP_ANONYMOUS = 4096; // 0x1000 on macOS
+    private const int MAP_JIT = 0x800; // Only used on macOS, ignored elsewhere
 
     public delegate long CompiledFunction();
 
@@ -81,9 +82,13 @@ public unsafe class JitCompiler
         }
         else
         {
-            // On Unix/macOS, use mmap with read/write permissions initially
+            int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                flags |= MAP_JIT;
+            }
             memory = mmap_unix(IntPtr.Zero, (UIntPtr)size, PROT_READ | PROT_WRITE, 
-                              MAP_PRIVATE | MAP_ANONYMOUS, -1, IntPtr.Zero);
+                              flags, -1, IntPtr.Zero);
             
             // Check for MAP_FAILED (which is -1 cast to IntPtr)
             if (memory == new IntPtr(-1))
