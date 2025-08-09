@@ -13,7 +13,10 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
   - `Instruction.cs` - Instruction definitions and types
   - `Parser.cs` - Instruction file parsing with comment support
   - `VirtualMachine.cs` - Stack-based interpreter  
-  - `JitCompiler.cs` - Cross-architecture native code generation with x64 and ARM64 support
+  - `JitCompiler.cs` - Abstract base class for JIT compilation with factory method
+  - `JitCompilerArm64.cs` - ARM64-specific native code generation
+  - `JitCompilerX64.cs` - x64-specific native code generation
+  - `NativeMemoryManager.cs` - Cross-platform memory allocation and protection utilities
   - `SimpleJIT.Core.csproj` - Library project file
 - **SimpleJIT.Tests/** - Comprehensive test suite
   - `InstructionTests.cs` - Unit tests for instruction types
@@ -34,7 +37,9 @@ A C# implementation of a simple JIT compiler and virtual machine that can read i
 
 - **Parse simple instruction language** from text files with support for `#` and `//` comments
 - **Execute using a stack-based virtual machine** interpreter (guaranteed cross-platform)
-- **Cross-architecture JIT compilation** to native assembly for both x64 and ARM64 processors
+- **Cross-architecture JIT compilation** with clean separation between ARM64 and x64 code generation
+- **Modular architecture** with dedicated classes for each processor architecture
+- **Advanced memory management** with specialized utility class for cross-platform native memory operations
 - **Two-stage memory allocation** with security-compliant executable memory management
 - **Automatic architecture detection** with processor-specific code generation
 - **Cross-platform compatibility** with intelligent fallback execution strategies
@@ -82,7 +87,7 @@ var instructions = Parser.ParseFile("myprogram.txt");
 var vm = new VirtualMachine();
 var result = vm.Execute(instructions);
 
-// Attempt JIT compilation (works on all major platforms and architectures)
+// Attempt JIT compilation (automatically selects architecture-specific compiler)
 var compiledFunction = JitCompiler.CompileInstructions(instructions);
 if (compiledFunction != null)
 {
@@ -206,17 +211,23 @@ The project demonstrates several key computer science concepts:
 
 - **Lexical Analysis**: Robust instruction parsing with comment support and error handling
 - **Virtual Machine Design**: Stack-based interpreter with comprehensive instruction set
-- **Cross-Architecture JIT Compilation**: Native code generation for both x64 and ARM64 processors
-- **Two-Stage Memory Management**: Security-compliant executable memory allocation (RW → RX)
-- **Architecture Detection**: Runtime processor detection with appropriate code generation
+- **Modular JIT Architecture**: Clean separation between base JIT logic and architecture-specific code generation
+- **Cross-Architecture Code Generation**: Dedicated compilers for x64 and ARM64 with native instruction encoding
+- **Advanced Memory Management**: Specialized utility class for cross-platform native memory operations
+- **Two-Stage Memory Allocation**: Security-compliant executable memory management (RW → RX)
+- **Factory Pattern**: Runtime architecture detection with automatic compiler selection
 - **Platform Abstraction**: Unified memory management across Windows, macOS, and Linux
 - **Error Handling**: Graceful degradation and comprehensive exception handling
 - **Cross-Platform Development**: True cross-architecture compatibility with native performance
 - **Test-Driven Development**: Comprehensive test coverage with xUnit framework
-- **Software Architecture**: Clean separation between parsing, execution, and compilation layers
+- **Clean Architecture**: Separation of concerns with dedicated classes for parsing, execution, compilation, and memory management
 
 ### Technical Highlights
 
+- **Modular JIT Design**: Clean inheritance hierarchy with abstract base class and architecture-specific derived classes
+- **Specialized Memory Management**: Dedicated NativeMemoryManager utility class for cross-platform memory operations
+- **Architecture-Specific Code Generation**: Separate JitCompilerArm64 and JitCompilerX64 classes with processor-specific optimizations
+- **Factory Pattern Implementation**: Automatic architecture detection and compiler instantiation
 - **Unsafe Code**: Uses C# unsafe blocks for direct memory manipulation in JIT compiler
 - **Platform Interop**: Cross-platform memory allocation (VirtualAlloc on Windows, mmap on Unix)
 - **ARM64 Assembly**: Native ARM64 instruction encoding with proper function prologue/epilogue and MOVN for negative numbers
