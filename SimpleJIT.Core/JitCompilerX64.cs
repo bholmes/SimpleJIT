@@ -5,6 +5,10 @@ namespace SimpleJIT.Core;
 
 public unsafe class JitCompilerX64 : JitCompiler
 {
+    // Constants for placeholder implementations
+    private const int PlaceholderCallResultValue = 42;
+    private const int TestArgMultiplier = 10;
+    
     protected override byte[] GenerateCode(List<Instruction> instructions)
     {
         var code = new List<byte>();
@@ -179,9 +183,9 @@ public unsafe class JitCompilerX64 : JitCompiler
         // 2. Call the target function
         // 3. Push the result back onto stack
         
-        // For demonstration, we'll just push a placeholder value (42)
+        // For demonstration, we'll just push a placeholder value
         // This allows the basic structure to work for testing
-        EmitLoad(code, 42);
+        EmitLoad(code, PlaceholderCallResultValue);
     }
 
     private void EmitLoadArg(List<byte> code, int argIndex)
@@ -191,6 +195,6 @@ public unsafe class JitCompilerX64 : JitCompiler
         
         // For demonstration, we'll just push the argument index as a value
         // This allows the basic structure to work for testing
-        EmitLoad(code, argIndex * 10); // Multiply by 10 to make it more obvious in tests
+        EmitLoad(code, argIndex * TestArgMultiplier); // Use named constant for test-specific logic
     }
 }

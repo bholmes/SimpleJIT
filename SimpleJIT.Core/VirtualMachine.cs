@@ -61,9 +61,15 @@ public class VirtualMachine
         }
     }
 
-    private int ExecuteInstructions(List<Instruction> instructions, List<int>? arguments = null, Program? program = null)
+    // Overload for instructions without a Program context
+    private int ExecuteInstructions(List<Instruction> instructions, List<int> arguments)
     {
-        arguments ??= new List<int>();
+        return ExecuteInstructions(instructions, arguments, null);
+    }
+
+    // Overload for instructions with a Program context
+    private int ExecuteInstructions(List<Instruction> instructions, List<int> arguments, Program? program)
+    {
 
         for (int pc = 0; pc < instructions.Count; pc++)
         {

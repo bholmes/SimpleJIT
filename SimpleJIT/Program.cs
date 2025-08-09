@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using SimpleJIT.Core;
 
 class Program
@@ -50,7 +51,8 @@ class Program
             
             // Detect format by checking if file contains function definitions
             var fileContent = File.ReadAllText(instructionFile);
-            bool isFunctionFormat = fileContent.Contains("int ") && fileContent.Contains("{") && fileContent.Contains("}");
+            // Use regex to detect function signature like 'int Main(' or 'int FunctionName('
+            bool isFunctionFormat = Regex.IsMatch(fileContent, @"^\s*int\s+\w+\s*\(", RegexOptions.Multiline);
             
             if (isFunctionFormat)
             {
