@@ -63,7 +63,7 @@ namespace SimpleJIT.Tests.Integration
             }
         }
 
-        [Fact(Skip = "Test expectation mismatch - parser is adding return instruction differently than expected")]
+        [Fact]
         public void EndToEndWorkflow_ParseCompileExecute_WorksAcrossPlatforms()
         {
             // Arrange
@@ -83,7 +83,7 @@ ret";
                 var compiledFunction = JitCompiler.CompileInstructions(instructions);
 
                 // Assert
-                Assert.Equal(5, instructions.Count); // 4 instructions + implicit return
+                Assert.Equal(6, instructions.Count); // 5 instructions + implicit return
                 
                 if (compiledFunction != null)
                 {

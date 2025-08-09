@@ -39,17 +39,14 @@ namespace SimpleJIT.Tests
             NativeMemoryManager.FreeMemory(ptr, 4096);
         }
 
-        [Fact(Skip = "NativeMemoryManager now throws ArgumentOutOfRangeException for zero size instead of returning zero pointer")]
-        public void AllocateWritableMemory_ZeroSize_ReturnsZeroPointer()
+        [Fact]
+        public void AllocateWritableMemory_ZeroSize_ThrowsArgumentOutOfRangeException()
         {
             // Arrange
             int size = 0;
 
-            // Act
-            IntPtr ptr = NativeMemoryManager.AllocateWritableMemory(size);
-
-            // Assert
-            Assert.Equal(IntPtr.Zero, ptr);
+            // Act & Assert
+            Assert.Throws<ArgumentOutOfRangeException>(() => NativeMemoryManager.AllocateWritableMemory(size));
         }
 
         [Fact]
@@ -67,15 +64,15 @@ namespace SimpleJIT.Tests
             NativeMemoryManager.FreeMemory(ptr, size);
         }
 
-        [Fact(Skip = "NativeMemoryManager now throws ArgumentException for null pointer instead of being silent")]
-        public void CommitExecutableMemory_ZeroPointer_DoesNotThrow()
+        [Fact]
+        public void CommitExecutableMemory_ZeroPointer_ThrowsArgumentException()
         {
             // Arrange
             IntPtr ptr = IntPtr.Zero;
             int size = 4096;
 
-            // Act & Assert - should not throw
-            NativeMemoryManager.CommitExecutableMemory(ptr, size);
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => NativeMemoryManager.CommitExecutableMemory(ptr, size));
         }
 
         [Fact]
