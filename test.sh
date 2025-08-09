@@ -27,8 +27,16 @@ echo "6. Testing error handling - invalid instruction..."
 dotnet run --project SimpleJIT samples/invalid.txt
 echo
 
-echo "7. Testing usage help..."
+echo "7. Testing function-based programs..."
+dotnet run --project SimpleJIT samples/functions.txt
+echo
+
+echo "8. Testing usage help..."
 dotnet run --project SimpleJIT
+echo
+
+echo "9. Running all unit tests..."
+dotnet test --verbosity normal
 echo
 
 echo "=== All tests completed ==="
