@@ -17,7 +17,8 @@ public static unsafe class NativeMemoryManager
     private const int PROT_WRITE = 2;
     private const int PROT_EXEC = 4;
     private const int MAP_PRIVATE = 2;
-    private const int MAP_ANONYMOUS = 4096; // 0x1000 on macOS
+    private const int MAP_ANONYMOUS_LINUX = 0x20;
+    private const int MAP_ANONYMOUS_MACOS = 0x1000;
     private const int MAP_JIT = 0x800; // Only used on macOS, ignored elsewhere
 
     // Windows P/Invoke declarations
@@ -60,11 +61,12 @@ public static unsafe class NativeMemoryManager
         }
         else
         {
-            int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+            int flags = MAP_PRIVATE;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                flags |= MAP_JIT;
-            }
+                flags |= MAP_JIT | MAP_ANONYMOUS_MACOS;
+            else
+                flags |= MAP_ANONYMOUS_LINUX;
+
             memory = mmap_unix(IntPtr.Zero, (UIntPtr)size, PROT_READ | PROT_WRITE, 
                               flags, -1, IntPtr.Zero);
             
