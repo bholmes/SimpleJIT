@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace SimpleJIT.Core;
 
-public unsafe class JitCompiler
+public unsafe abstract class JitCompiler
 {
     private const uint PAGE_READWRITE = 0x04;
     private const uint PAGE_EXECUTE_READ = 0x20;
@@ -41,11 +41,13 @@ public unsafe class JitCompiler
 
     public static CompiledFunction? CompileInstructions(List<Instruction> instructions)
     {
-        var compiler = new JitCompiler();
+        JitCompiler compiler = RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+            ? new Arm64JitCompiler()
+            : new X64JitCompiler();
         return compiler.Compile(instructions);
     }
 
-    private CompiledFunction? Compile(List<Instruction> instructions)
+    protected CompiledFunction? Compile(List<Instruction> instructions)
     {
         try
         {
@@ -72,7 +74,9 @@ public unsafe class JitCompiler
         }
     }
 
-    private IntPtr AllocateWritableMemory(int size)
+    protected abstract byte[] GenerateCode(List<Instruction> instructions);
+
+    protected IntPtr AllocateWritableMemory(int size)
     {
         IntPtr memory;
         
@@ -101,7 +105,7 @@ public unsafe class JitCompiler
         return memory;
     }
 
-    private IntPtr CommitExecutableMemory(IntPtr memory, int size)
+    protected IntPtr CommitExecutableMemory(IntPtr memory, int size)
     {
         bool success;
         
@@ -122,20 +126,11 @@ public unsafe class JitCompiler
 
         return memory;
     }
+}
 
-    private byte[] GenerateCode(List<Instruction> instructions)
-    {
-        if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
-        {
-            return GenerateArm64Code(instructions);
-        }
-        else
-        {
-            return GenerateX64Code(instructions);
-        }
-    }
-
-    private byte[] GenerateArm64Code(List<Instruction> instructions)
+public unsafe class Arm64JitCompiler : JitCompiler
+{
+    protected override byte[] GenerateCode(List<Instruction> instructions)
     {
         var code = new List<byte>();
         
@@ -172,22 +167,22 @@ public unsafe class JitCompiler
             switch (instruction.Type)
             {
                 case InstructionType.Load:
-                    EmitLoadArm64(code, instruction.Value);
+                    EmitLoad(code, instruction.Value);
                     break;
                 case InstructionType.Add:
-                    EmitAddArm64(code);
+                    EmitAdd(code);
                     break;
                 case InstructionType.Sub:
-                    EmitSubArm64(code);
+                    EmitSub(code);
                     break;
                 case InstructionType.Mul:
-                    EmitMulArm64(code);
+                    EmitMul(code);
                     break;
                 case InstructionType.Div:
-                    EmitDivArm64(code);
+                    EmitDiv(code);
                     break;
                 case InstructionType.Print:
-                    EmitPrintArm64(code);
+                    EmitPrint(code);
                     break;
                 case InstructionType.Return:
                     break; // Handle at the end
@@ -213,79 +208,7 @@ public unsafe class JitCompiler
         return code.ToArray();
     }
 
-    private byte[] GenerateX64Code(List<Instruction> instructions)
-    {
-        var code = new List<byte>();
-        
-        // Function prologue - setup stack frame
-        // push rbp
-        code.Add(0x55);
-        // mov rbp, rsp
-        code.AddRange([0x48, 0x89, 0xE5]);
-        
-        // Reserve space for local stack (simulating our VM stack)
-        // sub rsp, 512 (space for 64 8-byte values)
-        code.AddRange([0x48, 0x81, 0xEC, 0x00, 0x02, 0x00, 0x00]);
-        
-        // Initialize stack pointer (r12 will hold our stack top index)
-        // xor r12, r12
-        code.AddRange([0x4D, 0x31, 0xE4]);
-
-        foreach (var instruction in instructions)
-        {
-            switch (instruction.Type)
-            {
-                case InstructionType.Load:
-                    EmitLoadX64(code, instruction.Value);
-                    break;
-                case InstructionType.Add:
-                    EmitAddX64(code);
-                    break;
-                case InstructionType.Sub:
-                    EmitSubX64(code);
-                    break;
-                case InstructionType.Mul:
-                    EmitMulX64(code);
-                    break;
-                case InstructionType.Div:
-                    EmitDivX64(code);
-                    break;
-                case InstructionType.Print:
-                    EmitPrintX64(code);
-                    break;
-                case InstructionType.Return:
-                    break; // Handle at the end
-            }
-        }
-
-        // Function epilogue - get top stack value as return value
-        // Default to 0 if no instructions were executed
-        // xor rax, rax (set rax = 0)
-        code.AddRange([0x48, 0x31, 0xC0]);
-        
-        // If stack has values (r12 > 0), get the top value
-        // test r12, r12
-        code.AddRange([0x4D, 0x85, 0xE4]);
-        // je skip_load (if r12 == 0, skip loading from stack)
-        code.AddRange([0x74, 0x05]);
-        // mov rax, [rsp + r12*8 - 8] (get top stack value)
-        code.AddRange([0x4A, 0x8B, 0x44, 0xE4, 0xF8]);
-        // skip_load:
-        
-        // Restore stack
-        // add rsp, 512
-        code.AddRange([0x48, 0x81, 0xC4, 0x00, 0x02, 0x00, 0x00]);
-        
-        // pop rbp
-        code.Add(0x5D);
-        // ret
-        code.Add(0xC3);
-
-        return code.ToArray();
-    }
-
-    // ARM64 instruction emitters
-    private void EmitLoadArm64(List<byte> code, long value)
+    private void EmitLoad(List<byte> code, long value)
     {
         // Load the immediate value into x0 using correct ARM64 encoding
         // For negative values, we need to handle them as 64-bit signed values
@@ -330,7 +253,7 @@ public unsafe class JitCompiler
         code.AddRange([0x73, 0x06, 0x00, 0x91]);
     }
 
-    private void EmitAddArm64(List<byte> code)
+    private void EmitAdd(List<byte> code)
     {
         // Pop first operand (most recent)
         // sub x19, x19, #1              // Decrement stack pointer
@@ -355,7 +278,7 @@ public unsafe class JitCompiler
         code.AddRange([0x73, 0x06, 0x00, 0x91]);
     }
 
-    private void EmitSubArm64(List<byte> code)
+    private void EmitSub(List<byte> code)
     {
         // sub x19, x19, #1              // Decrement stack pointer
         code.AddRange([0x73, 0x06, 0x00, 0xD1]);
@@ -377,7 +300,7 @@ public unsafe class JitCompiler
         code.AddRange([0x73, 0x06, 0x00, 0x91]);
     }
 
-    private void EmitMulArm64(List<byte> code)
+    private void EmitMul(List<byte> code)
     {
         // sub x19, x19, #1              // Decrement stack pointer
         code.AddRange([0x73, 0x06, 0x00, 0xD1]);
@@ -399,7 +322,7 @@ public unsafe class JitCompiler
         code.AddRange([0x73, 0x06, 0x00, 0x91]);
     }
 
-    private void EmitDivArm64(List<byte> code)
+    private void EmitDiv(List<byte> code)
     {
         // sub x19, x19, #1              // Decrement stack pointer
         code.AddRange([0x73, 0x06, 0x00, 0xD1]);
@@ -421,14 +344,87 @@ public unsafe class JitCompiler
         code.AddRange([0x73, 0x06, 0x00, 0x91]);
     }
 
-    private void EmitPrintArm64(List<byte> code)
+    private void EmitPrint(List<byte> code)
     {
         // For simplicity, this is a no-op that leaves the stack unchanged
         // In a real implementation, you'd call printf or similar
     }
+}
 
-    // X64 instruction emitters (renamed from the original methods)
-    private void EmitLoadX64(List<byte> code, long value)
+public unsafe class X64JitCompiler : JitCompiler
+{
+    protected override byte[] GenerateCode(List<Instruction> instructions)
+    {
+        var code = new List<byte>();
+        
+        // Function prologue - setup stack frame
+        // push rbp
+        code.Add(0x55);
+        // mov rbp, rsp
+        code.AddRange([0x48, 0x89, 0xE5]);
+        
+        // Reserve space for local stack (simulating our VM stack)
+        // sub rsp, 512 (space for 64 8-byte values)
+        code.AddRange([0x48, 0x81, 0xEC, 0x00, 0x02, 0x00, 0x00]);
+        
+        // Initialize stack pointer (r12 will hold our stack top index)
+        // xor r12, r12
+        code.AddRange([0x4D, 0x31, 0xE4]);
+
+        foreach (var instruction in instructions)
+        {
+            switch (instruction.Type)
+            {
+                case InstructionType.Load:
+                    EmitLoad(code, instruction.Value);
+                    break;
+                case InstructionType.Add:
+                    EmitAdd(code);
+                    break;
+                case InstructionType.Sub:
+                    EmitSub(code);
+                    break;
+                case InstructionType.Mul:
+                    EmitMul(code);
+                    break;
+                case InstructionType.Div:
+                    EmitDiv(code);
+                    break;
+                case InstructionType.Print:
+                    EmitPrint(code);
+                    break;
+                case InstructionType.Return:
+                    break; // Handle at the end
+            }
+        }
+
+        // Function epilogue - get top stack value as return value
+        // Default to 0 if no instructions were executed
+        // xor rax, rax (set rax = 0)
+        code.AddRange([0x48, 0x31, 0xC0]);
+        
+        // If stack has values (r12 > 0), get the top value
+        // test r12, r12
+        code.AddRange([0x4D, 0x85, 0xE4]);
+        // je skip_load (if r12 == 0, skip loading from stack)
+        code.AddRange([0x74, 0x05]);
+        // mov rax, [rsp + r12*8 - 8] (get top stack value)
+        code.AddRange([0x4A, 0x8B, 0x44, 0xE4, 0xF8]);
+        // skip_load:
+        
+        // Restore stack
+        // add rsp, 512
+        code.AddRange([0x48, 0x81, 0xC4, 0x00, 0x02, 0x00, 0x00]);
+        
+        // pop rbp
+        code.Add(0x5D);
+        // ret
+        code.Add(0xC3);
+
+        return code.ToArray();
+    }
+
+    private void EmitLoad(List<byte> code, long value)
     {
         // mov rax, immediate value
         code.AddRange([0x48, 0xB8]);
@@ -441,7 +437,7 @@ public unsafe class JitCompiler
         code.AddRange([0x49, 0xFF, 0xC4]);
     }
 
-    private void EmitAddX64(List<byte> code)
+    private void EmitAdd(List<byte> code)
     {
         // dec r12 (pop first operand)
         code.AddRange([0x49, 0xFF, 0xCC]);
@@ -462,7 +458,7 @@ public unsafe class JitCompiler
         code.AddRange([0x49, 0xFF, 0xC4]);
     }
 
-    private void EmitSubX64(List<byte> code)
+    private void EmitSub(List<byte> code)
     {
         // dec r12 (pop first operand - the subtrahend)
         code.AddRange([0x49, 0xFF, 0xCC]); 
@@ -480,7 +476,7 @@ public unsafe class JitCompiler
         code.AddRange([0x49, 0xFF, 0xC4]); 
     }
 
-    private void EmitMulX64(List<byte> code)
+    private void EmitMul(List<byte> code)
     {
         code.AddRange([0x49, 0xFF, 0xCC]); // dec r12
         code.AddRange([0x4A, 0x8B, 0x04, 0xE4]); // mov rax, [rsp + r12*8]
@@ -490,7 +486,7 @@ public unsafe class JitCompiler
         code.AddRange([0x49, 0xFF, 0xC4]); // inc r12
     }
 
-    private void EmitDivX64(List<byte> code)
+    private void EmitDiv(List<byte> code)
     {
         // dec r12 (pop first operand - the divisor)
         code.AddRange([0x49, 0xFF, 0xCC]); 
@@ -510,7 +506,7 @@ public unsafe class JitCompiler
         code.AddRange([0x49, 0xFF, 0xC4]); 
     }
 
-    private void EmitPrintX64(List<byte> code)
+    private void EmitPrint(List<byte> code)
     {
         // For simplicity, we'll just keep the value on stack without actual printing
         // In a real implementation, you'd call printf or similar
