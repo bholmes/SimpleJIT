@@ -36,7 +36,7 @@ public class InstructionTests
     [InlineData(InstructionType.Div, 0, "Div")]
     [InlineData(InstructionType.Print, 0, "Print")]
     [InlineData(InstructionType.Return, 0, "Return")]
-    public void Instruction_ToString_ReturnsExpectedFormat(InstructionType type, long value, string expected)
+    public void Instruction_ToString_ReturnsExpectedFormat(InstructionType type, int value, string expected)
     {
         // Arrange
         var instruction = new Instruction(type, value);

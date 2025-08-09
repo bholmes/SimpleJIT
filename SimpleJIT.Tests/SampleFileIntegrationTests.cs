@@ -215,7 +215,7 @@ namespace SimpleJIT.Tests.Integration
         [InlineData("example.txt", 30)]
         [InlineData("complex.txt", 6)]
         [InlineData("multi.txt", 125)]
-        public void SampleFiles_ParameterizedTest_ProducesExpectedResults(string fileName, long expectedResult)
+        public void SampleFiles_ParameterizedTest_ProducesExpectedResults(string fileName, int expectedResult)
         {
             // Arrange
             var sampleFile = Path.Combine(SamplesDirectory, fileName);

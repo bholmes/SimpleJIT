@@ -6,7 +6,7 @@ namespace SimpleJIT.Core;
 
 public unsafe abstract class JitCompiler
 {
-    public delegate long CompiledFunction();
+    public delegate int CompiledFunction();
 
     public static CompiledFunction? CompileInstructions(List<Instruction> instructions)
     {

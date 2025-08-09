@@ -127,7 +127,7 @@ namespace SimpleJIT.Tests.Unit
             // Arrange
             var instructions = new List<Instruction>
             {
-                new(InstructionType.Load, long.MaxValue),
+                new(InstructionType.Load, int.MaxValue),
                 new(InstructionType.Load, 1),
                 new(InstructionType.Add), // This will overflow
                 new(InstructionType.Return)
@@ -138,7 +138,7 @@ namespace SimpleJIT.Tests.Unit
             var result = vm.Execute(instructions);
 
             // Assert - Should handle overflow (wrapping to negative)
-            Assert.Equal(long.MinValue, result);
+            Assert.Equal(int.MinValue, result);
         }
 
         [Fact]

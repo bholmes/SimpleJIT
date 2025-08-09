@@ -61,7 +61,7 @@ public class Parser
         if (parts.Length > 2)
             throw new ArgumentException("Load instruction should have exactly one argument");
 
-        if (!long.TryParse(parts[1], out long value))
+        if (!int.TryParse(parts[1], out int value))
             throw new ArgumentException($"Invalid value for load instruction: {parts[1]}");
 
         return new Instruction(InstructionType.Load, value);

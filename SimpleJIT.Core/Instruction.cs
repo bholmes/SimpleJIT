@@ -14,9 +14,9 @@ public enum InstructionType
 public class Instruction
 {
     public InstructionType Type { get; set; }
-    public long Value { get; set; }
+    public int Value { get; set; }
 
-    public Instruction(InstructionType type, long value = 0)
+    public Instruction(InstructionType type, int value = 0)
     {
         Type = type;
         Value = value;

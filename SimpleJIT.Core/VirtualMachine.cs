@@ -5,9 +5,9 @@ namespace SimpleJIT.Core;
 
 public class VirtualMachine
 {
-    private Stack<long> stack = new Stack<long>();
+    private Stack<int> stack = new Stack<int>();
 
-    public long Execute(List<Instruction> instructions)
+    public int Execute(List<Instruction> instructions)
     {
         stack.Clear();
 

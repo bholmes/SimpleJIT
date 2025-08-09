@@ -83,7 +83,7 @@ public unsafe class JitCompilerArm64 : JitCompiler
         return code.ToArray();
     }
 
-    private void EmitLoad(List<byte> code, long value)
+    private void EmitLoad(List<byte> code, int value)
     {
         // Load the immediate value into x0 using correct ARM64 encoding
         // For negative values, we need to handle them as 64-bit signed values

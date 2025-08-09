@@ -76,10 +76,10 @@ public unsafe class JitCompilerX64 : JitCompiler
         return code.ToArray();
     }
 
-    private void EmitLoad(List<byte> code, long value)
+    private void EmitLoad(List<byte> code, int value)
     {
-        // mov rax, immediate value
-        code.AddRange([0x48, 0xB8]);
+        // mov rax, immediate value (32-bit immediate, zero-extended to 64-bit)
+        code.AddRange([0x48, 0xC7, 0xC0]);
         code.AddRange(BitConverter.GetBytes(value));
         
         // mov [rsp + r12*8], rax (push to our stack)
